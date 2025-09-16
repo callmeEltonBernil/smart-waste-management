@@ -1,0 +1,912 @@
+	<script src="tailwind.config.js"></script>
+
+
+
+
+
+
+
+
+
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+  import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "your-project.firebaseapp.com",
+    projectId: "your-project-id",
+    storageBucket: "your-project.appspot.com",
+    messagingSenderId: "XXXXXX",
+    appId: "XXXXXX"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  const logoutBtn = document.getElementById("logoutBtn");
+  logoutBtn.addEventListener("click", () => {
+    signOut(auth).then(() => {
+      // ✅ Clear localStorage and redirect
+      localStorage.removeItem("isLoggedIn");
+      window.location.href = "CapstoneLogin.html";
+    }).catch((error) => {
+      alert("Logout failed: " + error.message);
+    });
+  });
+
+
+
+
+IOT CODE 
+
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include "HX711.h"
+
+// HX711 Pins
+#define DT  4
+#define SCK 5
+#define BUZZER_PIN 19
+HX711 scale;
+
+// LCD setup (0x27 or 0x3F depending on your module)
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+float calibration_factor = 419.19; // adjust after calibration
+
+void setup() {
+  Serial.begin(115200);
+
+  // HX711 init
+  scale.begin(DT, SCK);
+  scale.tare();
+  scale.set_scale(calibration_factor);
+
+  // LCD init
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0,0);
+  lcd.print("Scale Ready");
+  delay(2000);
+}
+
+void loop() {
+  float weight = scale.get_units(10); // average of 10 readings
+
+  Serial.print("Weight: ");
+  Serial.print(weight, 2);
+  Serial.println(" kg");
+
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Weight:");
+  lcd.setCursor(0,1);
+  lcd.print(weight, 2);
+  lcd.print(" kg");
+
+  delay(1000);
+}
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Smart Food Waste Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'light-green': '#80c687',
+                        'dark-green': '#3a742e',
+                    },
+                    fontFamily: {
+                        'poppins': ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url('LOGIN BG.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .shake {
+            animation: shake 0.3s ease;
+        }
+
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full mx-4">
+        <!-- Login Card -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8 login-container">
+            <!-- Logo and Title -->
+            <div class="text-center mb-8">
+                <div class="inline-block p-3 rounded-full bg-light-green bg-opacity-10 text-light-green mb-4">
+                    <i class="fas fa-recycle text-4xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800">Smart Waste Admin</h1>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-6">
+                <!-- Email Input -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <div class="mt-1 relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                        <input type="email" id="email" name="email" required
+                            class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-light-green focus:border-light-green transition-colors duration-200"
+                            placeholder="Enter your email">
+                    </div>
+                </div>
+
+                <!-- Password Input -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <div class="mt-1 relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" id="password" name="password" required
+                            class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-light-green focus:border-light-green transition-colors duration-200"
+                            placeholder="Enter your password">
+                        <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <i class="fas fa-eye text-gray-400 hover:text-gray-600"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="remember" name="remember"
+                            class="h-4 w-4 text-light-green focus:ring-light-green border-gray-300 rounded">
+                        <label for="remember" class="ml-2 block text-sm text-gray-700">Remember me</label>
+                    </div>
+                    <a href="#" id="forgotPassword" class="text-sm text-light-green hover:text-dark-green transition-colors duration-200">Forgot password?</a>
+                </div>
+
+                <!-- Login Button -->
+                <button type="submit" id="loginButton"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-dark-green hover:bg-light-green focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-light-green transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span id="buttonText">Sign In</span>
+                </button>
+            </form>
+
+            <!-- Error/Success Messages -->
+            <div id="messageContainer" class="mt-4 text-center hidden">
+                <div id="errorMessage" class="text-red-600 hidden"></div>
+                <div id="successMessage" class="text-green-600 hidden"></div>
+            </div>
+
+            <!-- Connection Status -->
+            <div class="mt-6 text-center">
+                <div id="connectionStatus" class="flex items-center justify-center text-sm">
+                    <div id="statusIndicator" class="w-2 h-2 rounded-full bg-gray-400 mr-2"></div>
+                    <span id="statusText" class="text-gray-500">Connecting to server...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+        import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
+
+        // Firebase configuration - Replace with your config
+        const firebaseConfig = {
+            apiKey: "your-api-key-here",
+            authDomain: "smartbin-iot.firebaseapp.com",
+            databaseURL: "https://smartbin-iot-default-rtdb.firebaseio.com",
+            projectId: "smartbin-iot",
+            storageBucket: "smartbin-iot.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "your-app-id-here"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // DOM elements
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginButton = document.getElementById('loginButton');
+        const buttonText = document.getElementById('buttonText');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const messageContainer = document.getElementById('messageContainer');
+        const loginContainer = document.querySelector('.login-container');
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const forgotPasswordLink = document.getElementById('forgotPassword');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+
+        // Authentication Manager Class
+        class AuthManager {
+            constructor() {
+                this.isInitialized = false;
+                this.init();
+            }
+
+            async init() {
+                try {
+                    // Test Firebase connection
+                    await this.testConnection();
+                    this.updateConnectionStatus('connected', 'Connected to server');
+                    this.isInitialized = true;
+
+                    // Check if user is already logged in
+                    onAuthStateChanged(auth, (user) => {
+                        if (user && window.location.pathname.includes('login')) {
+                            this.redirectToDashboard();
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('Firebase initialization failed:', error);
+                    this.updateConnectionStatus('error', 'Connection failed');
+                    this.showMessage('error', 'Unable to connect to server. Please try again later.');
+                }
+            }
+
+            async testConnection() {
+                // Test Firebase connection by trying to read from database
+                const testRef = ref(database, '.info/connected');
+                await get(testRef);
+            }
+
+            updateConnectionStatus(status, message) {
+                const colors = {
+                    connecting: { bg: 'bg-yellow-400', text: 'text-yellow-600' },
+                    connected: { bg: 'bg-green-400', text: 'text-green-600' },
+                    error: { bg: 'bg-red-400', text: 'text-red-600' }
+                };
+
+                const color = colors[status] || colors.connecting;
+                statusIndicator.className = `w-2 h-2 rounded-full ${color.bg} mr-2`;
+                statusText.className = `${color.text}`;
+                statusText.textContent = message;
+            }
+
+            async login(email, password) {
+                if (!this.isInitialized) {
+                    this.showMessage('error', 'System is still initializing. Please wait.');
+                    return;
+                }
+
+                try {
+                    this.setLoadingState(true);
+                    this.hideMessages();
+
+                    // Authenticate with Firebase
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+
+                    // Get user data from database
+                    const userRef = ref(database, `users/${user.uid}`);
+                    const snapshot = await get(userRef);
+                    
+                    if (!snapshot.exists()) {
+                        throw new Error('User profile not found. Please contact administrator.');
+                    }
+
+                    const userData = snapshot.val();
+                    
+                    // Check if user has admin role
+                    if (userData.role !== 'admin') {
+                        await auth.signOut();
+                        throw new Error('Access denied. Admin privileges required.');
+                    }
+
+                    // Store session data securely
+                    const sessionData = {
+                        uid: user.uid,
+                        email: user.email,
+                        role: userData.role,
+                        permissions: userData.permissions || [],
+                        loginTime: Date.now(),
+                        lastActivity: Date.now()
+                    };
+
+                    // Use sessionStorage for better security (clears on tab close)
+                    sessionStorage.setItem('smartbin_session', JSON.stringify(sessionData));
+                    
+                    // Update last login in database
+                    await this.updateLastLogin(user.uid);
+
+                    this.showMessage('success', 'Login successful! Redirecting...');
+                    
+                    // Redirect after short delay
+                    setTimeout(() => {
+                        this.redirectToDashboard();
+                    }, 1500);
+
+                } catch (error) {
+                    console.error('Login error:', error);
+                    this.handleLoginError(error);
+                } finally {
+                    this.setLoadingState(false);
+                }
+            }
+
+            async updateLastLogin(uid) {
+                try {
+                    const userRef = ref(database, `users/${uid}/last_login`);
+                    await set(userRef, new Date().toISOString());
+                } catch (error) {
+                    console.warn('Failed to update last login:', error);
+                }
+            }
+
+            handleLoginError(error) {
+                let message = 'Login failed. Please try again.';
+                
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                        message = 'Invalid email or password.';
+                        break;
+                    case 'auth/too-many-requests':
+                        message = 'Too many failed attempts. Please try again later.';
+                        break;
+                    case 'auth/network-request-failed':
+                        message = 'Network error. Please check your connection.';
+                        break;
+                    case 'auth/invalid-email':
+                        message = 'Please enter a valid email address.';
+                        break;
+                    default:
+                        message = error.message || message;
+                }
+
+                this.showMessage('error', message);
+                this.shakeContainer();
+            }
+
+            setLoadingState(isLoading) {
+                loginButton.disabled = isLoading;
+                
+                if (isLoading) {
+                    buttonText.innerHTML = '<div class="loading-spinner"></div>Signing in...';
+                    loginButton.classList.add('opacity-75');
+                } else {
+                    buttonText.textContent = 'Sign In';
+                    loginButton.classList.remove('opacity-75');
+                }
+            }
+
+            showMessage(type, message) {
+                messageContainer.classList.remove('hidden');
+                
+                if (type === 'error') {
+                    errorMessage.textContent = message;
+                    errorMessage.classList.remove('hidden');
+                    successMessage.classList.add('hidden');
+                } else if (type === 'success') {
+                    successMessage.textContent = message;
+                    successMessage.classList.remove('hidden');
+                    errorMessage.classList.add('hidden');
+                }
+            }
+
+            hideMessages() {
+                messageContainer.classList.add('hidden');
+                errorMessage.classList.add('hidden');
+                successMessage.classList.add('hidden');
+            }
+
+            shakeContainer() {
+                loginContainer.classList.add('shake');
+                setTimeout(() => {
+                    loginContainer.classList.remove('shake');
+                }, 300);
+            }
+
+            redirectToDashboard() {
+                window.location.href = 'index.html';
+            }
+
+            async resetPassword(email) {
+                try {
+                    await sendPasswordResetEmail(auth, email);
+                    this.showMessage('success', 'Password reset email sent! Check your inbox.');
+                } catch (error) {
+                    this.showMessage('error', 'Failed to send reset email. Please try again.');
+                }
+            }
+        }
+
+        // Initialize Auth Manager
+        const authManager = new AuthManager();
+
+        // Event Listeners
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            
+            if (!email || !password) {
+                authManager.showMessage('error', 'Please enter both email and password.');
+                return;
+            }
+
+            authManager.login(email, password);
+        });
+
+        // Toggle password visibility
+        togglePasswordBtn.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            const icon = togglePasswordBtn.querySelector('i');
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        });
+
+        // Forgot password handler
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                authManager.showMessage('error', 'Please enter your email address first.');
+                emailInput.focus();
+                return;
+            }
+            
+            authManager.resetPassword(email);
+        });
+
+        // Clear messages when user starts typing
+        [emailInput, passwordInput].forEach(input => {
+            input.addEventListener('input', () => {
+                authManager.hideMessages();
+            });
+        });
+
+        // Enter key support for form fields
+        [emailInput, passwordInput].forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    loginForm.dispatchEvent(new Event('submit'));
+                }
+            });
+        });
+
+        // Auto-focus email field on load
+        window.addEventListener('load', () => {
+            emailInput.focus();
+        });
+
+    </script>
+</body>
+</html>
+
+
+--------------------------------------------------------
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Smart Food Waste Management - Admin Dashboard</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+	<div class="flex h-screen">
+		<!-- Sidebar -->
+		<div class="w-64 bg-green-600 text-white transition-all duration-300 flex flex-col">
+			<div class="p-4 flex-1">
+				<!-- Logo -->
+				<div class="mb-8 text-center">
+					<i class="fas fa-recycle text-2xl text-white "></i>
+					<h1 class="text-2xl font-bold">Smart Waste Admin</h1>
+				</div>
+				<nav aria-label="Primary">
+					<ul class="space-y-2">
+						<li>
+							<a href="#dashboard" class="flex items-center p-2 rounded hover:bg-green-700 transition-colors" data-tab="dashboard" role="button" aria-controls="dashboard" aria-selected="true">
+								<i class="fas fa-home w-6" aria-hidden="true"></i>
+								<span class="ml-1">Dashboard</span>
+							</a>
+						</li>
+						<li>
+							<a href="#bin-management" class="flex items-center p-2 rounded hover:bg-green-700 transition-colors" data-tab="bin-management" role="button" aria-controls="bin-management" aria-selected="false">
+								<i class="fas fa-trash w-6" aria-hidden="true"></i>
+								<span class="ml-1">Smart Bin Management</span>
+							</a>
+						</li>
+						<li>
+							<a href="#reports" class="flex items-center p-2 rounded hover:bg-green-700 transition-colors" data-tab="reports" role="button" aria-controls="reports" aria-selected="false">
+								<i class="fas fa-chart-bar w-6" aria-hidden="true"></i>
+								<span class="ml-1">Waste Data Reports</span>
+							</a>
+						</li>
+						<li>
+							<a href="#user-management" class="flex items-center p-2 rounded hover:bg-green-700 transition-colors" data-tab="users" role="button" aria-controls="users" aria-selected="false">
+								<i class="fas fa-users w-6" aria-hidden="true"></i>
+								<span class="ml-1">User Management</span>
+							</a>
+						</li>
+						<li>
+							<a href="#notifications" class="flex items-center p-2 rounded hover:bg-green-700 transition-colors" data-tab="notifications" role="button" aria-controls="notifications" aria-selected="false">
+								<i class="fas fa-bell w-6" aria-hidden="true"></i>
+								<span class="ml-1">Notifications</span>
+							</a>
+						</li>
+						<li>
+							<a href="#settings" class="flex items-center p-2 rounded hover:bg-green-700 transition-colors" data-tab="settings" role="button" aria-controls="settings" aria-selected="false">
+								<i class="fas fa-cog w-6" aria-hidden="true"></i>
+								<span class="ml-1">Settings</span>
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+			
+			<!-- Logout Section - Fixed at bottom -->
+			<div class="p-4 border-t border-green-500">
+				<button id="logoutBtn" class="w-full flex items-center justify-center p-3 rounded-lg bg-white text-green-600 hover:bg-gray-100 hover:text-green-700 transition-all duration-200 font-medium shadow-sm">
+					<i class="fas fa-sign-out-alt w-5 mr-2" aria-hidden="true"></i>
+					Logout
+				</button>
+			</div>
+		</div>
+
+		<!-- Main Content -->
+		<div class="flex-1 overflow-auto">
+			<!-- Dashboard Section -->
+			<div id="dashboard" class="tab-section p-8" role="region" aria-label="Dashboard">
+				<!-- Summary Cards -->
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+					<div class="bg-white rounded-lg shadow p-6" data-card="total-waste">
+						<div class="flex items-center">
+							<div class="p-3 rounded-full bg-green-100 text-green-600">
+								<i class="fas fa-weight text-2xl" aria-hidden="true"></i>
+							</div>
+							<div class="ml-4">
+								<h3 class="text-gray-500 text-sm">Total Food Waste Today</h3>
+								<p id="total-waste-today" class="text-2xl font-semibold">-- kg</p>
+							</div>
+						</div>
+					</div>
+					<div class="bg-white rounded-lg shadow p-6" data-card="full-bins">
+						<div class="flex items-center">
+							<div class="p-3 rounded-full bg-red-500 bg-opacity-10 text-red-500">
+								<i class="fas fa-trash text-2xl" aria-hidden="true"></i>
+							</div>
+							<div class="ml-4">
+								<h3 class="text-gray-500 text-sm">Bins Full</h3>
+								<p id="bins-full" class="text-2xl font-semibold">-- bins</p>
+							</div>
+						</div>
+					</div>
+					<div class="bg-white rounded-lg shadow p-6" data-card="active-bins">
+						<div class="flex items-center">
+							<div class="p-3 rounded-full bg-blue-500 bg-opacity-10 text-blue-500">
+								<i class="fas fa-check-circle text-2xl" aria-hidden="true"></i>
+							</div>
+							<div class="ml-4">
+								<h3 class="text-gray-500 text-sm">Active Bins</h3>
+								<p id="active-bins" class="text-2xl font-semibold">-- bins</p>
+							</div>
+						</div>
+					</div>
+					<div class="bg-white rounded-lg shadow p-6" data-card="recent-alerts">
+						<div class="flex items-center">
+							<div class="p-3 rounded-full bg-yellow-500 bg-opacity-10 text-yellow-500">
+								<i class="fas fa-exclamation-triangle text-2xl" aria-hidden="true"></i>
+							</div>
+							<div class="ml-4">
+								<h3 class="text-gray-500 text-sm">Recent Alerts</h3>
+								<p id="recent-alerts" class="text-2xl font-semibold">-- alerts</p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Chart -->
+				<div class="bg-white rounded-lg shadow p-6 mb-8">
+					<h2 class="text-xl font-semibold mb-4">Food Waste Trend (Last 7 Days)</h2>
+					<canvas id="wasteChart" height="100" aria-label="Food Waste Trend" role="img"></canvas>
+				</div>
+
+				<!-- Alerts Table -->
+				<div class="bg-white rounded-lg shadow">
+					<div class="p-6">
+						<h2 class="text-xl font-semibold mb-4">Recent Alerts</h2>
+						<div class="overflow-x-auto">
+							<table class="min-w-full" aria-label="Alerts">
+								<thead>
+									<tr class="bg-gray-50">
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bin Location</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+									</tr>
+								</thead>
+								<tbody id="alerts-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Smart Bin Management Section -->
+			<div id="bin-management" class="tab-section p-8 hidden" role="region" aria-label="Smart Bin Management">
+				<h2 class="text-2xl font-bold mb-6">Smart Bin Management</h2>
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					<!-- Bin Status Cards -->
+					<div class="bg-white rounded-lg shadow p-6">
+						<h3 class="text-lg font-semibold mb-4">Bin Status Overview</h3>
+						<div class="space-y-4">
+							<div class="flex justify-between items-center">
+								<span>Total Bins</span>
+								<span class="font-semibold" data-status="total-bins">--</span>
+							</div>
+							<div class="flex justify-between items-center">
+								<span>Active Bins</span>
+								<span class="font-semibold text-green-600" data-status="active-bins">--</span>
+							</div>
+							<div class="flex justify-between items-center">
+								<span>Maintenance Required</span>
+								<span class="font-semibold text-yellow-600" data-status="maintenance-required">--</span>
+							</div>
+							<div class="flex justify-between items-center">
+								<span>Out of Service</span>
+								<span class="font-semibold text-red-600" data-status="out-of-service">--</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Bin Location Map -->
+					<div class="bg-white rounded-lg shadow p-6 col-span-2">
+						<h3 class="text-lg font-semibold mb-4">Bin Locations</h3>
+						<div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+							<p class="text-gray-500">Map View Coming Soon</p>
+						</div>
+					</div>
+
+					<!-- Bin Maintenance Schedule -->
+					<div class="bg-white rounded-lg shadow p-6 col-span-3">
+						<h3 class="text-lg font-semibold mb-4">Maintenance Schedule</h3>
+						<div class="overflow-x-auto">
+							<table class="min-w-full" aria-label="Maintenance Schedule">
+								<thead>
+									<tr class="bg-gray-50">
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bin ID</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Maintenance</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Next Maintenance</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+									</tr>
+								</thead>
+								<tbody id="maintenance-table-body" class="divide-y divide-gray-200"></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- FIXED: Waste Data Reports Section -->
+			<div id="reports" class="tab-section p-8 hidden" role="region" aria-label="Waste Data Reports">
+				<h2 class="text-2xl font-bold mb-6">Waste Data Reports</h2>
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+					<!-- Waste Composition Chart -->
+					<div class="bg-white rounded-lg shadow p-6">
+						<h3 class="text-lg font-semibold mb-4">Waste Composition</h3>
+						<canvas id="wasteCompositionChart" height="300" aria-label="Waste Composition" role="img"></canvas>
+					</div>
+
+					<!-- Waste Collection Trends -->
+					<div class="bg-white rounded-lg shadow p-6">
+						<h3 class="text-lg font-semibold mb-4">Collection Trends</h3>
+						<canvas id="collectionTrendsChart" height="300" aria-label="Collection Trends" role="img"></canvas>
+					</div>
+
+					<!-- Detailed Reports -->
+					<div class="bg-white rounded-lg shadow p-6 col-span-2">
+						<h3 class="text-lg font-semibold mb-4">Detailed Reports</h3>
+						<div class="space-y-4">
+							<div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+								<div>
+									<h4 class="font-medium">Monthly Waste Report</h4>
+									<p class="text-sm text-gray-500">Current Month</p>
+								</div>
+								<button id="downloadMonthly" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" aria-label="Download Monthly Report">Download</button>
+							</div>
+							<div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+								<div>
+									<h4 class="font-medium">Weekly Analysis</h4>
+									<p class="text-sm text-gray-500">Current Week</p>
+								</div>
+								<button id="downloadWeekly" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" aria-label="Download Weekly Analysis">Download</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- User Management Section -->
+			<div id="users" class="tab-section p-8 hidden" role="region" aria-label="User Management">
+				<h2 class="text-2xl font-bold mb-6">User Management</h2>
+				<div class="bg-white rounded-lg shadow">
+					<div class="p-6">
+						<div class="flex justify-between items-center mb-6">
+							<h3 class="text-lg font-semibold">User List</h3>
+							<button id="addUserBtn" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" aria-label="Add New User">
+								Add New User
+							</button>
+						</div>
+						<div class="overflow-x-auto">
+							<table class="min-w-full" aria-label="Users">
+								<thead>
+									<tr class="bg-gray-50">
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+									</tr>
+								</thead>
+								<tbody id="users-table-body" class="divide-y divide-gray-200"></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Notifications Section -->
+			<div id="notifications" class="tab-section p-8 hidden" role="region" aria-label="Notifications">
+				<h2 class="text-2xl font-bold mb-6">Notifications</h2>
+				<div id="notifications-list" class="space-y-4">
+					<!-- Dynamic notifications will be loaded here -->
+				</div>
+			</div>
+
+			<!-- Settings Section -->
+			<div id="settings" class="tab-section p-8 hidden" role="region" aria-label="Settings">
+				<h2 class="text-2xl font-bold mb-6">Settings</h2>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<!-- System Settings -->
+					<div class="bg-white rounded-lg shadow p-6">
+						<h3 class="text-lg font-semibold mb-4">System Settings</h3>
+						<div class="space-y-4">
+							<div>
+								<label class="block text-sm font-medium text-gray-700" for="system-name">System Name</label>
+								<input id="system-name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600" value="Smart Waste Management System" aria-label="System Name">
+							</div>
+							<div>
+								<label class="block text-sm font-medium text-gray-700" for="alert-threshold">Alert Threshold (%)</label>
+								<input id="alert-threshold" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600" value="80" aria-label="Alert Threshold percentage">
+							</div>
+							<div>
+								<label class="block text-sm font-medium text-gray-700" for="maintenance-interval">Maintenance Interval (days)</label>
+								<input id="maintenance-interval" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600" value="30" aria-label="Maintenance interval in days">
+							</div>
+						</div>
+					</div>
+
+					<!-- Notification Settings -->
+					<div class="bg-white rounded-lg shadow p-6">
+						<h3 class="text-lg font-semibold mb-4">Notification Settings</h3>
+						<div class="space-y-4">
+							<div class="flex items-center justify-between">
+								<span class="text-sm font-medium text-gray-700">Email Notifications</span>
+								<label class="relative inline-flex items-center cursor-pointer">
+									<input type="checkbox" class="sr-only peer" checked aria-label="Enable email notifications">
+									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+								</label>
+							</div>
+							<div class="flex items-center justify-between">
+								<span class="text-sm font-medium text-gray-700">SMS Notifications</span>
+								<label class="relative inline-flex items-center cursor-pointer">
+									<input type="checkbox" class="sr-only peer" aria-label="Enable SMS notifications">
+									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+								</label>
+							</div>
+							<div class="flex items-center justify-between">
+								<span class="text-sm font-medium text-gray-700">Push Notifications</span>
+								<label class="relative inline-flex items-center cursor-pointer">
+									<input type="checkbox" class="sr-only peer" checked aria-label="Enable push notifications">
+									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+								</label>
+							</div>
+						</div>
+					</div>
+
+					<!-- Save Button -->
+					<div class="col-span-2 flex justify-end">
+						<button class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700" aria-label="Save Changes">
+							Save Changes
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Authentication Script -->
+	<script type="module">
+		import { auth, onAuthStateChanged } from './firebase-init.js';
+		
+		// Wait for auth state to initialize
+		onAuthStateChanged(auth, (user) => {
+			if (!user) {
+				// Not logged in, redirect to login
+				window.location.href = 'Capstone1Login.html';
+			} else {
+				// User is logged in, set local storage and continue
+				localStorage.setItem('isLoggedIn', 'true');
+				localStorage.setItem('userEmail', user.email);
+			}
+		});
+
+		// FIXED: Logout button handler with correct ID
+		document.getElementById('logoutBtn').addEventListener('click', () => {
+			if (window.logout) {
+				window.logout();
+			}
+		});
+	</script>
+
+	<!-- Load Firebase config and Chart.js -->
+	<script src="iot-config.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script type="module" src="dashboard.js"></script>
+</body>
+</html>

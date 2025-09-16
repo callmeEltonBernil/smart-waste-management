@@ -1,0 +1,8 @@
+{
+  "name": "smart-waste-simulator",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "dependencies": {
+    "firebase-admin": "^11.8.0"
+  }
+}

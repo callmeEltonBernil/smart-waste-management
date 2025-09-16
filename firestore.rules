@@ -1,0 +1,85 @@
+// Setup: Deploy with 'firebase deploy --only firestore:rules'
+/*rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true;
+    }
+
+    function isStaff() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'staff' &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // Bins collection - admins read/write, staff read only
+    match /bins/{binId} {
+      allow read: if isAdmin() || isStaff();
+      allow write: if isAdmin();
+    }
+
+    // Readings collection - only Cloud Functions can write, authenticated users can read
+    match /readings/{readingId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only Cloud Functions via Admin SDK
+    }
+
+    // Alerts collection - CF writes, admins can ack, staff can read
+    match /alerts/{alertId} {
+      allow read: if isAuthenticated();
+      allow update: if isAdmin() && 
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ack']) &&
+                    request.resource.data.ack is bool;
+      allow write: if false; // Only Cloud Functions via Admin SDK
+    }
+
+    // Users collection - admins full access, users can read self only
+    match /users/{uid} {
+      allow read: if isAdmin() || isOwner(uid);
+      allow write: if isAdmin();
+    }
+
+    // Summaries collection (for weekly reports)
+    match /summaries/{summaryId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only Cloud Functions
+    }
+
+    // Deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}*/
+
+
+/*rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}*/
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Smart Food Waste Management - Admin Dashboard</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+	<div class="flex h-screen">
+		<!-- Sidebar -->
+		<div class="w-64 bg-green-600 text-white transition-all duration-300 flex flex-col">
+			<div class="p-4 flex-1">
+				<!-- Logo -->
+				<div class="mb-8 text-center">
+					<i class="fas fa-recycle text-2xl text-white "></i>
+					<h1 class="text-2xl font-bold">Smart Waste Admin</h1>
+				</div>
+				<nav aria-label="Primary">
+					<ul class="space-y-2">
+						<li>
+							<a href="#dashboard" class="flex items-center p-2 rounded hover:bg-green-700 transition-colors" data-tab="dashboard" role="button" aria-controls="dashboard" aria-selected="true">
+								<i class="fas fa-home w-6" aria-hidden="true"></i>
+								<span class="ml-1">Dashboard</span>
+							</a>
+						</li>
+						<li>
+							<a href="#bin-management" class="flex items-center p-2 rounded hover:bg-green-700 transition-colors" data-tab="bin-management" role="button" aria-controls="bin-management" aria-selected="false">
+								<i class="fas fa-trash w-6" aria-hidden="true"></i>
+								<span class="ml-1">Smart Bin Management</span>
+							</a>
+						</li>
+						<li>
+							<a href="#reports" class="flex items-center p-2 rounded hover:bg-green-700 transition-colors" data-tab="reports" role="button" aria-controls="reports" aria-selected="false">
+								<i class="fas fa-chart-bar w-6" aria-hidden="true"></i>
+								<span class="ml-1">Waste Data Reports</span>
+							</a>
+						</li>
+						<li>
+							<a href="#user-management" class="flex items-center p-2 rounded hover:bg-green-700 transition-colors" data-tab="users" role="button" aria-controls="users" aria-selected="false">
+								<i class="fas fa-users w-6" aria-hidden="true"></i>
+								<span class="ml-1">User Management</span>
+							</a>
+						</li>
+						<li>
+							<a href="#notifications" class="flex items-center p-2 rounded hover:bg-green-700 transition-colors" data-tab="notifications" role="button" aria-controls="notifications" aria-selected="false">
+								<i class="fas fa-bell w-6" aria-hidden="true"></i>
+								<span class="ml-1">Notifications</span>
+							</a>
+						</li>
+						<li>
+							<a href="#settings" class="flex items-center p-2 rounded hover:bg-green-700 transition-colors" data-tab="settings" role="button" aria-controls="settings" aria-selected="false">
+								<i class="fas fa-cog w-6" aria-hidden="true"></i>
+								<span class="ml-1">Settings</span>
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+			
+			<!-- Logout Section - Fixed at bottom -->
+			<div class="p-4 border-t border-green-500">
+				<button id="logoutBtn" class="w-full flex items-center justify-center p-3 rounded-lg bg-white text-green-600 hover:bg-gray-100 hover:text-green-700 transition-all duration-200 font-medium shadow-sm">
+					<i class="fas fa-sign-out-alt w-5 mr-2" aria-hidden="true"></i>
+					Logout
+				</button>
+			</div>
+		</div>
+
+		<!-- Main Content -->
+		<div class="flex-1 overflow-auto">
+			<!-- Dashboard Section -->
+			<div id="dashboard" class="tab-section p-8" role="region" aria-label="Dashboard">
+				<!-- Summary Cards -->
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+					<div class="bg-white rounded-lg shadow p-6" data-card="total-waste">
+						<div class="flex items-center">
+							<div class="p-3 rounded-full bg-green-100 text-green-600">
+								<i class="fas fa-weight text-2xl" aria-hidden="true"></i>
+							</div>
+							<div class="ml-4">
+								<h3 class="text-gray-500 text-sm">Total Food Waste Today</h3>
+								<p id="total-waste-today" class="text-2xl font-semibold">-- kg</p>
+							</div>
+						</div>
+					</div>
+					<div class="bg-white rounded-lg shadow p-6" data-card="full-bins">
+						<div class="flex items-center">
+							<div class="p-3 rounded-full bg-red-500 bg-opacity-10 text-red-500">
+								<i class="fas fa-trash text-2xl" aria-hidden="true"></i>
+							</div>
+							<div class="ml-4">
+								<h3 class="text-gray-500 text-sm">Bins Full</h3>
+								<p id="bins-full" class="text-2xl font-semibold">-- bins</p>
+							</div>
+						</div>
+					</div>
+					<div class="bg-white rounded-lg shadow p-6" data-card="active-bins">
+						<div class="flex items-center">
+							<div class="p-3 rounded-full bg-blue-500 bg-opacity-10 text-blue-500">
+								<i class="fas fa-check-circle text-2xl" aria-hidden="true"></i>
+							</div>
+							<div class="ml-4">
+								<h3 class="text-gray-500 text-sm">Active Bins</h3>
+								<p id="active-bins" class="text-2xl font-semibold">-- bins</p>
+							</div>
+						</div>
+					</div>
+					<div class="bg-white rounded-lg shadow p-6" data-card="recent-alerts">
+						<div class="flex items-center">
+							<div class="p-3 rounded-full bg-yellow-500 bg-opacity-10 text-yellow-500">
+								<i class="fas fa-exclamation-triangle text-2xl" aria-hidden="true"></i>
+							</div>
+							<div class="ml-4">
+								<h3 class="text-gray-500 text-sm">Recent Alerts</h3>
+								<p id="recent-alerts" class="text-2xl font-semibold">-- alerts</p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Chart -->
+				<div class="bg-white rounded-lg shadow p-6 mb-8">
+					<h2 class="text-xl font-semibold mb-4">Food Waste Trend (Last 7 Days)</h2>
+					<canvas id="wasteChart" height="100" aria-label="Food Waste Trend" role="img"></canvas>
+				</div>
+
+				<!-- Alerts Table -->
+				<div class="bg-white rounded-lg shadow">
+					<div class="p-6">
+						<h2 class="text-xl font-semibold mb-4">Recent Alerts</h2>
+						<div class="overflow-x-auto">
+							<table class="min-w-full" aria-label="Alerts">
+								<thead>
+									<tr class="bg-gray-50">
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bin Location</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+									</tr>
+								</thead>
+								<tbody id="alerts-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Smart Bin Management Section -->
+			<div id="bin-management" class="tab-section p-8 hidden" role="region" aria-label="Smart Bin Management">
+				<h2 class="text-2xl font-bold mb-6">Smart Bin Management</h2>
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					<!-- Bin Status Cards -->
+					<div class="bg-white rounded-lg shadow p-6">
+						<h3 class="text-lg font-semibold mb-4">Bin Status Overview</h3>
+						<div class="space-y-4">
+							<div class="flex justify-between items-center">
+								<span>Total Bins</span>
+								<span class="font-semibold" data-status="total-bins">--</span>
+							</div>
+							<div class="flex justify-between items-center">
+								<span>Active Bins</span>
+								<span class="font-semibold text-green-600" data-status="active-bins">--</span>
+							</div>
+							<div class="flex justify-between items-center">
+								<span>Maintenance Required</span>
+								<span class="font-semibold text-yellow-600" data-status="maintenance-required">--</span>
+							</div>
+							<div class="flex justify-between items-center">
+								<span>Out of Service</span>
+								<span class="font-semibold text-red-600" data-status="out-of-service">--</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Bin Location Map -->
+					<div class="bg-white rounded-lg shadow p-6 col-span-2">
+						<h3 class="text-lg font-semibold mb-4">Bin Locations</h3>
+						<div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+							<p class="text-gray-500">Map View Coming Soon</p>
+						</div>
+					</div>
+
+					<!-- Bin Maintenance Schedule -->
+					<div class="bg-white rounded-lg shadow p-6 col-span-3">
+						<h3 class="text-lg font-semibold mb-4">Maintenance Schedule</h3>
+						<div class="overflow-x-auto">
+							<table class="min-w-full" aria-label="Maintenance Schedule">
+								<thead>
+									<tr class="bg-gray-50">
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bin ID</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Maintenance</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Next Maintenance</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+									</tr>
+								</thead>
+								<tbody id="maintenance-table-body" class="divide-y divide-gray-200"></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- FIXED: Waste Data Reports Section -->
+			<div id="reports" class="tab-section p-8 hidden" role="region" aria-label="Waste Data Reports">
+				<h2 class="text-2xl font-bold mb-6">Waste Data Reports</h2>
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+					<!-- Waste Composition Chart -->
+					<div class="bg-white rounded-lg shadow p-6">
+						<h3 class="text-lg font-semibold mb-4">Waste Composition</h3>
+						<canvas id="wasteCompositionChart" height="300" aria-label="Waste Composition" role="img"></canvas>
+					</div>
+
+					<!-- Waste Collection Trends -->
+					<div class="bg-white rounded-lg shadow p-6">
+						<h3 class="text-lg font-semibold mb-4">Collection Trends</h3>
+						<canvas id="collectionTrendsChart" height="300" aria-label="Collection Trends" role="img"></canvas>
+					</div>
+
+					<!-- Detailed Reports -->
+					<div class="bg-white rounded-lg shadow p-6 col-span-2">
+						<h3 class="text-lg font-semibold mb-4">Detailed Reports</h3>
+						<div class="space-y-4">
+							<div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+								<div>
+									<h4 class="font-medium">Monthly Waste Report</h4>
+									<p class="text-sm text-gray-500">Current Month</p>
+								</div>
+								<button id="downloadMonthly" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" aria-label="Download Monthly Report">Download</button>
+							</div>
+							<div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+								<div>
+									<h4 class="font-medium">Weekly Analysis</h4>
+									<p class="text-sm text-gray-500">Current Week</p>
+								</div>
+								<button id="downloadWeekly" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" aria-label="Download Weekly Analysis">Download</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- User Management Section -->
+			<div id="users" class="tab-section p-8 hidden" role="region" aria-label="User Management">
+				<h2 class="text-2xl font-bold mb-6">User Management</h2>
+				<div class="bg-white rounded-lg shadow">
+					<div class="p-6">
+						<div class="flex justify-between items-center mb-6">
+							<h3 class="text-lg font-semibold">User List</h3>
+							<button id="addUserBtn" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" aria-label="Add New User">
+								Add New User
+							</button>
+						</div>
+						<div class="overflow-x-auto">
+							<table class="min-w-full" aria-label="Users">
+								<thead>
+									<tr class="bg-gray-50">
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+									</tr>
+								</thead>
+								<tbody id="users-table-body" class="divide-y divide-gray-200"></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Notifications Section -->
+			<div id="notifications" class="tab-section p-8 hidden" role="region" aria-label="Notifications">
+				<h2 class="text-2xl font-bold mb-6">Notifications</h2>
+				<div id="notifications-list" class="space-y-4">
+					<!-- Dynamic notifications will be loaded here -->
+				</div>
+			</div>
+
+			<!-- Settings Section -->
+			<div id="settings" class="tab-section p-8 hidden" role="region" aria-label="Settings">
+				<h2 class="text-2xl font-bold mb-6">Settings</h2>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<!-- System Settings -->
+					<div class="bg-white rounded-lg shadow p-6">
+						<h3 class="text-lg font-semibold mb-4">System Settings</h3>
+						<div class="space-y-4">
+							<div>
+								<label class="block text-sm font-medium text-gray-700" for="system-name">System Name</label>
+								<input id="system-name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600" value="Smart Waste Management System" aria-label="System Name">
+							</div>
+							<div>
+								<label class="block text-sm font-medium text-gray-700" for="alert-threshold">Alert Threshold (%)</label>
+								<input id="alert-threshold" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600" value="80" aria-label="Alert Threshold percentage">
+							</div>
+							<div>
+								<label class="block text-sm font-medium text-gray-700" for="maintenance-interval">Maintenance Interval (days)</label>
+								<input id="maintenance-interval" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600" value="30" aria-label="Maintenance interval in days">
+							</div>
+						</div>
+					</div>
+
+					<!-- Notification Settings -->
+					<div class="bg-white rounded-lg shadow p-6">
+						<h3 class="text-lg font-semibold mb-4">Notification Settings</h3>
+						<div class="space-y-4">
+							<div class="flex items-center justify-between">
+								<span class="text-sm font-medium text-gray-700">Email Notifications</span>
+								<label class="relative inline-flex items-center cursor-pointer">
+									<input type="checkbox" class="sr-only peer" checked aria-label="Enable email notifications">
+									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+								</label>
+							</div>
+							<div class="flex items-center justify-between">
+								<span class="text-sm font-medium text-gray-700">SMS Notifications</span>
+								<label class="relative inline-flex items-center cursor-pointer">
+									<input type="checkbox" class="sr-only peer" aria-label="Enable SMS notifications">
+									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+								</label>
+							</div>
+							<div class="flex items-center justify-between">
+								<span class="text-sm font-medium text-gray-700">Push Notifications</span>
+								<label class="relative inline-flex items-center cursor-pointer">
+									<input type="checkbox" class="sr-only peer" checked aria-label="Enable push notifications">
+									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+								</label>
+							</div>
+						</div>
+					</div>
+
+					<!-- Save Button -->
+					<div class="col-span-2 flex justify-end">
+						<button class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700" aria-label="Save Changes">
+							Save Changes
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Authentication Script -->
+	<script type="module">
+		import { auth, onAuthStateChanged } from './firebase-init.js';
+		
+		// Wait for auth state to initialize
+		onAuthStateChanged(auth, (user) => {
+			if (!user) {
+				// Not logged in, redirect to login
+				window.location.href = 'Capstone1Login.html';
+			} else {
+				// User is logged in, set local storage and continue
+				localStorage.setItem('isLoggedIn', 'true');
+				localStorage.setItem('userEmail', user.email);
+			}
+		});
+
+		// FIXED: Logout button handler with correct ID
+		document.getElementById('logoutBtn').addEventListener('click', () => {
+			if (window.logout) {
+				window.logout();
+			}
+		});
+	</script>
+
+	<!-- Load Firebase config and Chart.js -->
+	<script src="iot-config.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script type="module" src="dashboard.js"></script>
+</body>
+</html>
