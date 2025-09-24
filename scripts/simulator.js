@@ -11,7 +11,7 @@ admin.initializeApp({
 // Connect to Firestore emulator
 const db = admin.firestore();
 db.settings({
-  host: 'localhost:8080',
+  host: 'localhost:8080', 
   ssl: false
 });
 
@@ -72,8 +72,8 @@ async function sendReading(bin) {
 
     await db.collection('readings').add(reading);
 
-    // Create alerts if needed
-    await checkAndCreateAlerts(bin, percentFull);
+    // Use enhanced alert management
+    await manageAlerts(bin, percentFull);
 
     // Log with status indicators
     const status = percentFull >= 90 ? '🔴' : percentFull >= 80 ? '🟡' : '🟢';
@@ -84,40 +84,80 @@ async function sendReading(bin) {
   }
 }
 
-async function checkAndCreateAlerts(bin, percentFull) {
-  let alertKind = null;
-  let message = '';
-
-  if (percentFull >= 95) {
-    alertKind = 'full';
-    message = `Bin ${bin.id} is ${percentFull}% full and needs immediate attention`;
-  } else if (percentFull >= 80) {
-    alertKind = 'warning';
-    message = `Bin ${bin.id} is ${percentFull}% full - approaching capacity`;
-  }
-
-  if (alertKind) {
-    // Check if similar alert exists in last 30 minutes to avoid spam
-    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000);
-    const recentAlerts = await db.collection('alerts')
+// Enhanced alert management function (matches cloud functions logic)
+async function manageAlerts(bin, percentFull) {
+  try {
+    // Get the most recent unacknowledged alert for this bin
+    const recentAlertsQuery = db.collection('alerts')
       .where('binId', '==', bin.id)
-      .where('kind', '==', alertKind)
-      .where('ts', '>=', thirtyMinAgo)
-      .limit(1)
-      .get();
+      .where('ack', '==', false)
+      .orderBy('ts', 'desc')
+      .limit(1);
 
-    if (recentAlerts.empty) {
-      await db.collection('alerts').add({
-        binId: bin.id,
-        kind: alertKind,
-        message,
-        ts: admin.firestore.FieldValue.serverTimestamp(),
-        ack: false,
-        percentFull
-      });
-
-      console.log(`🚨 Alert created: ${alertKind.toUpperCase()} for ${bin.id}`);
+    const recentAlertsSnapshot = await recentAlertsQuery.get();
+    
+    let currentAlertLevel = null;
+    let message = '';
+    
+    // Determine what alert level should be active
+    if (percentFull >= 95) {
+      currentAlertLevel = 'full';
+      message = `Bin ${bin.id} is ${percentFull}% full and needs immediate attention`;
+    } else if (percentFull >= 80) {
+      currentAlertLevel = 'warning';
+      message = `Bin ${bin.id} is ${percentFull}% full - approaching capacity`;
     }
+
+    if (!recentAlertsSnapshot.empty) {
+      const existingAlert = recentAlertsSnapshot.docs[0];
+      const existingAlertData = existingAlert.data();
+      
+      if (currentAlertLevel) {
+        // Update existing alert if level changed
+        if (existingAlertData.kind !== currentAlertLevel) {
+          await existingAlert.ref.update({
+            kind: currentAlertLevel,
+            message,
+            percentFull,
+            ts: admin.firestore.FieldValue.serverTimestamp()
+          });
+          
+          console.log(`🔄 Alert updated: ${existingAlertData.kind} → ${currentAlertLevel} for ${bin.id}`);
+        }
+        // If same level, just update percentage and timestamp
+        else {
+          await existingAlert.ref.update({
+            message,
+            percentFull,
+            ts: admin.firestore.FieldValue.serverTimestamp()
+          });
+        }
+      } else {
+        // No alert needed anymore - acknowledge existing alert
+        await existingAlert.ref.update({
+          ack: true,
+          resolvedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        console.log(`✅ Alert resolved for ${bin.id} (dropped to ${percentFull}%)`);
+      }
+    } else {
+      // No existing unacknowledged alert - create new one if needed
+      if (currentAlertLevel) {
+        await db.collection('alerts').add({
+          binId: bin.id,
+          kind: currentAlertLevel,
+          message,
+          ts: admin.firestore.FieldValue.serverTimestamp(),
+          ack: false,
+          percentFull
+        });
+
+        console.log(`🚨 New alert created: ${currentAlertLevel.toUpperCase()} for ${bin.id}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error managing alerts:', { binId: bin.id, percentFull, error });
   }
 }
 
@@ -192,7 +232,7 @@ async function createHistoricalData() {
     console.log(`📊 Added ${batchReadings.length} historical readings`);
   }
 
-  // Create some historical alerts
+  // Create only a couple of initial alerts (they'll be managed properly going forward)
   const alerts = [
     {
       binId: 'BIN-001',
@@ -201,21 +241,13 @@ async function createHistoricalData() {
       percentFull: 85,
       ts: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
       ack: false
-    },
-    {
-      binId: 'BIN-002',
-      kind: 'full',
-      message: 'Bin BIN-002 is 95% full and needs immediate attention',
-      percentFull: 95,
-      ts: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-      ack: false
     }
   ];
 
   for (const alert of alerts) {
     await db.collection('alerts').add(alert);
   }
-  console.log(`🚨 Created ${alerts.length} historical alerts`);
+  console.log(`🚨 Created ${alerts.length} initial historical alerts`);
 }
 
 async function runSimulation() {

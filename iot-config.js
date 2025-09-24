@@ -1,7 +1,7 @@
 // Setup: Include this file before firebase-init.js
 // Reads from window.ENV or falls back to placeholders
 // Never commit real secrets to source control
-window.ENV = window.ENV || {
+/*window.ENV = window.ENV || {
   FIREBASE: {
     apiKey: "AIzaSyDLuMpdsTrO3av0C38bzCq21MmwcodXJkk",
     authDomain: "smart-bin-app-d9ef0.firebaseapp.com",
@@ -13,9 +13,8 @@ window.ENV = window.ENV || {
   }
 };
 
-export const firebaseConfig = window.ENV.FIREBASE;
-
-/*window.ENV = window.ENV || {
+export const firebaseConfig = window.ENV.FIREBASE;*/
+window.ENV = window.ENV || {
   FIREBASE: {
     apiKey: 'fake-api-key',
     authDomain: 'localhost',
@@ -28,4 +27,4 @@ export const firebaseConfig = window.ENV.FIREBASE;
   USE_EMULATORS: true
 };
 
-export const firebaseConfig = window.ENV.FIREBASE;*/
+export const firebaseConfig = window.ENV.FIREBASE;

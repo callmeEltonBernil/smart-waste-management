@@ -65,12 +65,17 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
 		};
 	}
 
+
+
 	function updateElement(selector, value) {
-		const element = document.querySelector(selector) || document.getElementById(selector);
-		if (element) {
-			element.textContent = value;
-		}
-	}
+    const element = document.querySelector(selector) || document.getElementById(selector);
+    if (element) {
+        element.textContent = value;
+        console.log(`Updated ${selector}: ${value}`);
+    } else {
+        console.warn(`Element not found: ${selector}`);
+    }
+}
 
 
 	// Chart initialization
@@ -118,10 +123,10 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
 		chartInstances.composition = new Chart(ctx, {
 			type: 'doughnut',
 			data: {
-				labels: ['Food Waste', 'Recyclables'],
+				labels: ['Food Waste'],
 				datasets: [{
-					data: [0, 0],
-					backgroundColor: ['#28a745', '#ffc107']
+					data: [0],
+					backgroundColor: ['#28a745']
 				}]
 			},
 			options: {
@@ -133,6 +138,7 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
 		// Load real-time composition data
 		loadCompositionData();
 	}
+
 
 	// FIXED: Real-time trends chart with actual data
 	function initTrendsChart() {
@@ -168,6 +174,7 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
 		loadTrendsData();
 	}
 
+
 	// FIXED: Load actual composition data from readings
 	function loadCompositionData() {
 		const thirtyDaysAgo = new Date();
@@ -182,7 +189,7 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
 		const unsubscribe = onSnapshot(q, (snapshot) => {
 			let totalWeight = 0;
 			let foodWasteWeight = 0;
-			let recyclableWeight = 0;
+			//let recyclableWeight = 0;
 			
 
 			snapshot.forEach(docSnap => {
@@ -193,10 +200,10 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
 				// Simulate composition based on bin type or reading patterns
 				if (reading.binId && reading.binId.includes('CANTEEN')) {
 					foodWasteWeight += weight * 0.7; // 70% food waste in canteen
-					recyclableWeight += weight * 0.2; // 20% recyclables
+					//recyclableWeight += weight * 0.2; // 20% recyclables
 				} else {
 					foodWasteWeight += weight * 0.6;
-					recyclableWeight += weight * 0.25;
+					//recyclableWeight += weight * 0.25;
 				}
 			});
 
@@ -204,7 +211,7 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
 			if (chartInstances.composition && totalWeight > 0) {
 				chartInstances.composition.data.datasets[0].data = [
 					Math.round(foodWasteWeight * 100) / 100,
-					Math.round(recyclableWeight * 100) / 100
+					//Math.round(recyclableWeight * 100) / 100
 				];
 				chartInstances.composition.update();
 			}
@@ -212,6 +219,7 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
 
 		subscriptions.push(unsubscribe);
 	}
+
 
 	// FIXED: Load actual trends data from readings
 	function loadTrendsData() {
@@ -272,6 +280,7 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
 		subscriptions.push(unsubscribe);
 	}
 
+
 	// Data loading functions
 	function loadLast7DaysData() {
 		const sevenDaysAgo = new Date();
@@ -329,109 +338,53 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
 		subscriptions.push(unsubscribe);
 	}
 
-	function loadAlertsData() {
-		const q = query(
-			collection(db, 'alerts'),
-			orderBy('ts', 'desc'),
-			limit(20)
-		);
 
-		const unsubscribe = onSnapshot(q, async (snapshot) => {
-			const alerts = [];
-
-			snapshot.forEach(docSnap => {
-				const alert = { id: docSnap.id, ...docSnap.data() };
-				alerts.push(alert);
-			});
-
-			// Fetch bin data for location names
-			const binData = new Map();
-			const binIds = [...new Set(alerts.map(alert => alert.binId))];
-			
-			for (const binId of binIds) {
-				try {
-					const binQuery = query(collection(db, 'bins'), where('__name__', '==', binId));
-					const binSnapshot = await getDocs(binQuery);
-					if (!binSnapshot.empty) {
-						binData.set(binId, binSnapshot.docs[0].data());
-					}
-				} catch (error) {
-					console.error('Error loading bin data:', error);
-				}
-			}
-
-			renderAlertsTable(alerts, binData);
-			updateElement('recent-alerts', `${alerts.length} alerts`);
-		});
-
-		subscriptions.push(unsubscribe);
-	}
-
-	/*function loadBinsData() {
-		const q = query(collection(db, 'bins'));
-
-		const unsubscribe = onSnapshot(q, async (snapshot) => {
-			let total = 0, active = 0, maintenanceRequired = 0, outOfService = 0;
-			const bins = [];
-
-			snapshot.forEach(docSnap => {
-				const bin = { id: docSnap.id, ...docSnap.data() };
-				bins.push(bin);
-				total++;
-
-				if (bin.active) {
-					active++;
-					
-					const maintenanceInterval = 30 * 24 * 60 * 60 * 1000;
-					const lastMaintenance = bin.updatedAt?.toDate() || bin.createdAt?.toDate();
-					if (lastMaintenance && Date.now() - lastMaintenance.getTime() > maintenanceInterval) {
-						maintenanceRequired++;
-					}
-				} else {
-					outOfService++;
-				}
-			});
-
-			// Update bin status counters
-			updateElement('[data-status="total-bins"]', total);
-			updateElement('[data-status="active-bins"]', active);
-			updateElement('[data-status="maintenance-required"]', maintenanceRequired);
-			updateElement('[data-status="out-of-service"]', outOfService);
-
-			window.binsData = bins;
-
-			if (renderedSections.has('maintenance')) {
-				renderMaintenanceTable(bins);
-			}
-
-			// FIXED: Refresh bins status immediately
-			await refreshBinsStatus();
-		});
-
-		subscriptions.push(unsubscribe);
-	}
-
-	function loadUsersData() {
-		const q = query(collection(db, 'users'));
-
-		const unsubscribe = onSnapshot(q, (snapshot) => {
-			const users = [];
-			snapshot.forEach(docSnap => {
-				users.push({ id: docSnap.id, ...docSnap.data() });
-			});
-
-			renderUsersTable(users);
-		});
-
-		subscriptions.push(unsubscribe);
-	}*/
-
-
-
-	function loadBinsData() {
-    const q = query(collection(db, 'bins'));
+	// Optimized alerts loading with better bin data fetching
+function loadAlertsData() {
+    const q = query(
+        collection(db, 'alerts'),
+        orderBy('ts', 'desc'),
+        limit(20)
+    );
 
     const unsubscribe = onSnapshot(q, async (snapshot) => {
+        const alerts = [];
+        snapshot.forEach(docSnap => {
+            const alert = { id: docSnap.id, ...docSnap.data() };
+            alerts.push(alert);
+        });
+
+        // More efficient bin data fetching
+        const binData = new Map();
+        const uniqueBinIds = [...new Set(alerts.map(alert => alert.binId))];
+        
+        if (uniqueBinIds.length > 0) {
+            try {
+                const binsQuery = query(
+                    collection(db, 'bins'),
+                    where('__name__', 'in', uniqueBinIds)
+                );
+                const binsSnapshot = await getDocs(binsQuery);
+                binsSnapshot.forEach(doc => {
+                    binData.set(doc.id, doc.data());
+                });
+            } catch (error) {
+                console.error('Error loading bin data:', error);
+            }
+        }
+
+        renderAlertsTable(alerts, binData);
+    });
+
+    subscriptions.push(unsubscribe);
+}
+
+
+// Simplified loadBinsData - remove conflicting updates
+function loadBinsData() {
+    const q = query(collection(db, 'bins'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
         let total = 0, active = 0, maintenanceRequired = 0, outOfService = 0;
         const bins = [];
 
@@ -441,8 +394,8 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
             total++;
 
             if (bin.active) {
-                active++;
-                
+							 active++;
+
                 const maintenanceInterval = 30 * 24 * 60 * 60 * 1000;
                 const lastMaintenance = bin.updatedAt?.toDate() || bin.createdAt?.toDate();
                 if (lastMaintenance && Date.now() - lastMaintenance.getTime() > maintenanceInterval) {
@@ -453,8 +406,9 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
             }
         });
 
+        // Only update these specific metrics
         updateElement('[data-status="total-bins"]', total);
-        updateElement('[data-status="active-bins"]', active);
+				updateElement('[data-status="active-bins"]', active);
         updateElement('[data-status="maintenance-required"]', maintenanceRequired);
         updateElement('[data-status="out-of-service"]', outOfService);
 
@@ -463,13 +417,11 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
         if (renderedSections.has('maintenance')) {
             renderMaintenanceTable(bins);
         }
-
-        // Call the fixed function
-        await refreshBinsStatus();
     });
 
     subscriptions.push(unsubscribe);
 }
+
 
 	// FIXED: Load notifications with close functionality
 	function loadNotifications() {
@@ -532,142 +484,50 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
 		subscriptions.push(unsubscribe);
 	}
 
-	/*
-	// FIXED: Refresh bins status with correct threshold
-	async function refreshBinsStatus() {
-		try {
-			const binsSnapshot = await getDocs(collection(db, 'bins'));
-			let activeBins = 0;
-			let fullBins = 0;
-
-			for (const binDoc of binsSnapshot.docs) {
-				const bin = binDoc.data();
-				if (bin.active) {
-					activeBins++;
-
-					const latestQuery = query(
-						collection(db, 'readings'),
-						where('binId', '==', binDoc.id),
-						orderBy('ts', 'desc'),
-						limit(1)
-					);
-
-					
-					const latestSnapshot = await getDocs(latestQuery);
-					if (!latestSnapshot.empty) {
-						const reading = latestSnapshot.docs[0].data();
-						// FIXED: Changed threshold to 80% to match alert generation
-						if (reading.percentFull >= 80) {
-							fullBins++;
-						}
-					}
-				}
-			}
-
-			updateElement('bins-full', `${fullBins} bins`);
-			updateElement('active-bins', `${activeBins} bins`);
-
-		} catch (error) {
-			console.error('Error refreshing bins status:', error);
-		}
-	}*/
-
-	/*async function refreshBinsStatus() {
-    try {
-        // Count all unacknowledged alerts (warning + full)
-        const alertsQuery = query(
-            collection(db, 'alerts'),
-            where('ack', '==', false),
-            where('kind', 'in', ['warning', 'full'])
-        );
-        
-        const alertsSnapshot = await getDocs(alertsQuery);
-        const binsNeedingAttention = alertsSnapshot.size;
-        
-        // Count active bins
-        const binsSnapshot = await getDocs(collection(db, 'bins'));
-        let activeBins = 0;
-        binsSnapshot.forEach(doc => {
-            if (doc.data().active) activeBins++;
-        });
-        
-        document.getElementById('bins-full').textContent = `${binsNeedingAttention} bins`;
-        document.getElementById('active-bins').textContent = `${activeBins} bins`;
-        
-        console.log(`Updated: ${binsNeedingAttention} bins needing attention`);
-        
-    } catch (error) {
-        console.error('Error refreshing bins status:', error);
-    }
-}*/
-
-async function refreshBinsStatus() {
-    try {
-        console.log('Refreshing bins status...');
-        
-        // Count unacknowledged full alerts
-        const fullAlertsQuery = query(
-            collection(db, 'alerts'),
-            where('kind', '==', 'full'),
-            where('ack', '==', false)
-        );
-        
-        const fullSnapshot = await getDocs(fullAlertsQuery);
-        const fullBinsCount = fullSnapshot.size;
-        
-        // Count active bins
-        const binsQuery = query(
-            collection(db, 'bins'),
-            where('active', '==', true)
-        );
-        
-        const binsSnapshot = await getDocs(binsQuery);
-        const activeBinsCount = binsSnapshot.size;
-        
-        // Direct DOM update (bypass updateElement function)
-        const binsFullEl = document.getElementById('bins-full');
-        const activeBinsEl = document.getElementById('active-bins');
-        
-        if (binsFullEl) {
-            binsFullEl.textContent = `${fullBinsCount} bins`;
-            console.log(`Updated bins-full to: ${fullBinsCount} bins`);
-        } else {
-            console.error('bins-full element not found');
-        }
-        
-        if (activeBinsEl) {
-            activeBinsEl.textContent = `${activeBinsCount} bins`;
-            console.log(`Updated active-bins to: ${activeBinsCount} bins`);
-        }
-        
-    } catch (error) {
-        console.error('Error refreshing bins status:', error);
-    }
-}
-
+	
 
 //-----------------------------------------------------------------------
-  function setupFullBinsSubscription() {
+  // Consolidated real-time status tracking
+function setupRealTimeStatusUpdates() {
+    // Track full bins via alerts
     const fullAlertsQuery = query(
         collection(db, 'alerts'),
         where('kind', '==', 'full'),
         where('ack', '==', false)
     );
     
-    const unsubscribe = onSnapshot(fullAlertsQuery, (snapshot) => {
+    const fullAlertsUnsubscribe = onSnapshot(fullAlertsQuery, (snapshot) => {
         const fullBinsCount = snapshot.size;
-        const binsFullEl = document.getElementById('bins-full');
-        
-        if (binsFullEl) {
-            binsFullEl.textContent = `${fullBinsCount} bins`;
-            console.log(`Real-time update: ${fullBinsCount} bins`);
-        }
+        updateElement('bins-full', `${fullBinsCount} bins`);
+        console.log(`Real-time full bins update: ${fullBinsCount}`);
     });
+
+    // Track active bins
+    const activeBinsQuery = query(
+        collection(db, 'bins'),
+        where('active', '==', true)
+    );
     
-    subscriptions.push(unsubscribe);
+    const activeBinsUnsubscribe = onSnapshot(activeBinsQuery, (snapshot) => {
+        const activeBinsCount = snapshot.size;
+        updateElement('active-bins', `${activeBinsCount} bins`);
+        console.log(`Real-time active bins update: ${activeBinsCount}`);
+    });
+
+    // Track total alerts
+    const allAlertsQuery = query(
+        collection(db, 'alerts'),
+        where('ack', '==', false)
+    );
+    
+    const allAlertsUnsubscribe = onSnapshot(allAlertsQuery, (snapshot) => {
+        const totalAlerts = snapshot.size;
+        updateElement('recent-alerts', `${totalAlerts} alerts`);
+        console.log(`Real-time alerts update: ${totalAlerts}`);
+    });
+
+    subscriptions.push(fullAlertsUnsubscribe, activeBinsUnsubscribe, allAlertsUnsubscribe);
 }
-
-
 
 
 
@@ -877,6 +737,7 @@ async function refreshBinsStatus() {
 		}
 	};
 
+
 	// FIXED: Close notification function
 	window.closeNotification = function(alertId) {
 		const notification = document.getElementById(`notification-${alertId}`);
@@ -889,6 +750,7 @@ async function refreshBinsStatus() {
 		}
 	};
 
+	
 	// FIXED: Add user function with real Firestore integration
 	async function addNewUser() {
 		const email = prompt('Enter user email:');
@@ -1069,31 +931,28 @@ async function refreshBinsStatus() {
 		subscriptions.forEach(unsubscribe => unsubscribe());
 	});
 
-	// Initialize the application
-	async function initialize() {
-		try {
-			await initializeAuth();
-			
-			// Load real-time data
-			loadLast7DaysData();
-			loadAlertsData();
-			loadBinsData();
+	// Updated initialize function
+async function initialize() {
+    try {
+        await initializeAuth();
+        
+        // Load real-time data
+        loadLast7DaysData();
+        loadAlertsData();
+        loadBinsData();
+        
+        // Setup real-time status updates (replaces old functions)
+        setupRealTimeStatusUpdates();
 
-
-			// In your initialize() function, add:
-       setupBinsStatusSubscription();
-
-
-			// Initialize with dashboard tab
-			switchTab('dashboard');
-			
-			// Refresh bins status every 30 seconds
-			setInterval(refreshBinsStatus, 30000);
-			
-		} catch (error) {
-			console.error('Initialization error:', error);
-		}
-	}
+        // Initialize with dashboard tab
+        switchTab('dashboard');
+        
+        // Remove the interval - real-time updates handle everything
+        
+    } catch (error) {
+        console.error('Initialization error:', error);
+    }
+}
 
 	// Start the application
 	initialize();

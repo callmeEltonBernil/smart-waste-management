@@ -6,6 +6,9 @@
 	<title>Smart Food Waste Management - Admin Dashboard</title>
 	<script src="https://cdn.tailwindcss.com"></script>
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+	<!-- Add Leaflet CSS and JS (put this in your HTML head or before closing body) -->
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body class="bg-gray-100">
 	<div class="flex h-screen">
@@ -176,10 +179,8 @@
 
 					<!-- Bin Location Map -->
 					<div class="bg-white rounded-lg shadow p-6 col-span-2">
-						<h3 class="text-lg font-semibold mb-4">Bin Locations</h3>
-						<div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-							<p class="text-gray-500">Map View Coming Soon</p>
-						</div>
+							<h3 class="text-lg font-semibold mb-4">Bin Locations</h3>
+							<div id="binLocationMap" class="h-64 rounded-lg border"></div>
 					</div>
 
 					<!-- Bin Maintenance Schedule -->
@@ -253,6 +254,7 @@
 								Add New User
 							</button>
 						</div>
+
 						<div class="overflow-x-auto">
 							<table class="min-w-full" aria-label="Users">
 								<thead>
@@ -267,6 +269,7 @@
 								<tbody id="users-table-body" class="divide-y divide-gray-200"></tbody>
 							</table>
 						</div>
+						
 					</div>
 				</div>
 			</div>
@@ -287,18 +290,22 @@
 					<div class="bg-white rounded-lg shadow p-6">
 						<h3 class="text-lg font-semibold mb-4">System Settings</h3>
 						<div class="space-y-4">
+
 							<div>
 								<label class="block text-sm font-medium text-gray-700" for="system-name">System Name</label>
 								<input id="system-name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600" value="Smart Waste Management System" aria-label="System Name">
 							</div>
+
 							<div>
 								<label class="block text-sm font-medium text-gray-700" for="alert-threshold">Alert Threshold (%)</label>
 								<input id="alert-threshold" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600" value="80" aria-label="Alert Threshold percentage">
 							</div>
+
 							<div>
 								<label class="block text-sm font-medium text-gray-700" for="maintenance-interval">Maintenance Interval (days)</label>
 								<input id="maintenance-interval" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600" value="30" aria-label="Maintenance interval in days">
 							</div>
+
 						</div>
 					</div>
 
@@ -313,6 +320,7 @@
 									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
 								</label>
 							</div>
+
 							<div class="flex items-center justify-between">
 								<span class="text-sm font-medium text-gray-700">SMS Notifications</span>
 								<label class="relative inline-flex items-center cursor-pointer">
@@ -320,6 +328,7 @@
 									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
 								</label>
 							</div>
+
 							<div class="flex items-center justify-between">
 								<span class="text-sm font-medium text-gray-700">Push Notifications</span>
 								<label class="relative inline-flex items-center cursor-pointer">
@@ -341,33 +350,13 @@
 		</div>
 	</div>
 
-	<!-- Authentication Script -->
-	<script type="module">
-		import { auth, onAuthStateChanged } from './firebase-init.js';
-		
-		// Wait for auth state to initialize
-		onAuthStateChanged(auth, (user) => {
-			if (!user) {
-				// Not logged in, redirect to login
-				window.location.href = 'Capstone1Login.html';
-			} else {
-				// User is logged in, set local storage and continue
-				localStorage.setItem('isLoggedIn', 'true');
-				localStorage.setItem('userEmail', user.email);
-			}
-		});
-
-		// FIXED: Logout button handler with correct ID
-		document.getElementById('logoutBtn').addEventListener('click', () => {
-			if (window.logout) {
-				window.logout();
-			}
-		});
-	</script>
 
 	<!-- Load Firebase config and Chart.js -->
-	<script src="iot-config.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-	<script type="module" src="dashboard.js"></script>
+<script src="iot-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="module" src="dashboard.js"></script>
+<script type="module" src="loginAuth.js"></script>
+<script type="module" src="mapSource.js"></script>
+
 </body>
 </html>

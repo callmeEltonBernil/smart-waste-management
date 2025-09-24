@@ -11,6 +11,89 @@ const { logger } = require('firebase-functions');
 initializeApp();
 const db = getFirestore();
 
+// Enhanced alert management function
+async function manageAlerts(binId, percentFull) {
+  try {
+    // Get the most recent unacknowledged alert for this bin
+    const recentAlertsQuery = db.collection('alerts')
+      .where('binId', '==', binId)
+      .where('ack', '==', false)
+      .orderBy('ts', 'desc')
+      .limit(1);
+
+    const recentAlertsSnapshot = await recentAlertsQuery.get();
+    
+    let currentAlertLevel = null;
+    let message = '';
+    
+    // Determine what alert level should be active
+    if (percentFull >= 95) {
+      currentAlertLevel = 'full';
+      message = `Bin ${binId} is ${percentFull}% full and needs immediate attention`;
+    } else if (percentFull >= 80) {
+      currentAlertLevel = 'warning';
+      message = `Bin ${binId} is ${percentFull}% full - approaching capacity`;
+    }
+
+    if (!recentAlertsSnapshot.empty) {
+      const existingAlert = recentAlertsSnapshot.docs[0];
+      const existingAlertData = existingAlert.data();
+      
+      if (currentAlertLevel) {
+        // Update existing alert if level changed
+        if (existingAlertData.kind !== currentAlertLevel) {
+          await existingAlert.ref.update({
+            kind: currentAlertLevel,
+            message,
+            percentFull,
+            ts: FieldValue.serverTimestamp() // Update timestamp for new severity
+          });
+          
+          logger.info('Alert updated', { 
+            binId, 
+            from: existingAlertData.kind, 
+            to: currentAlertLevel, 
+            percentFull 
+          });
+        }
+        // If same level, just update percentage and timestamp
+        else {
+          await existingAlert.ref.update({
+            message,
+            percentFull,
+            ts: FieldValue.serverTimestamp()
+          });
+        }
+      } else {
+        // No alert needed anymore - acknowledge existing alert
+        await existingAlert.ref.update({
+          ack: true,
+          resolvedAt: FieldValue.serverTimestamp()
+        });
+        
+        logger.info('Alert resolved', { binId, percentFull });
+      }
+    } else {
+      // No existing unacknowledged alert - create new one if needed
+      if (currentAlertLevel) {
+        await db.collection('alerts').add({
+          binId,
+          kind: currentAlertLevel,
+          message,
+          ts: FieldValue.serverTimestamp(),
+          ack: false,
+          percentFull
+        });
+
+        logger.info('New alert created', { binId, currentAlertLevel, percentFull });
+      }
+    }
+  } catch (error) {
+    logger.error('Error managing alerts', { binId, percentFull, error });
+    throw error;
+  }
+}
+
 // Process IoT readings and trigger alerts
 exports.onCreateReading = onDocumentCreated('readings/{readingId}', async (event) => {
   try {
@@ -38,44 +121,8 @@ exports.onCreateReading = onDocumentCreated('readings/{readingId}', async (event
     // Update reading with calculated percentage
     await event.data.ref.update({ percentFull });
 
-    // Check if alert should be triggered
-    const alertThreshold = thresholdPct;
-    const fullThreshold = 95;
-
-    let alertKind = null;
-    let message = '';
-
-    if (percentFull >= fullThreshold) {
-      alertKind = 'full';
-      message = `Bin ${binId} is ${percentFull}% full and needs immediate attention`;
-    } else if (percentFull >= alertThreshold) {
-      alertKind = 'warning';
-      message = `Bin ${binId} is ${percentFull}% full - approaching capacity`;
-    }
-
-    if (alertKind) {
-      // Check if similar alert exists in last 30 minutes to avoid spam
-      const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000);
-      const recentAlerts = await db.collection('alerts')
-        .where('binId', '==', binId)
-        .where('kind', '==', alertKind)
-        .where('ts', '>=', thirtyMinAgo)
-        .limit(1)
-        .get();
-
-      if (recentAlerts.empty) {
-        await db.collection('alerts').add({
-          binId,
-          kind: alertKind,
-          message,
-          ts: FieldValue.serverTimestamp(),
-          ack: false,
-          percentFull
-        });
-
-        logger.info('Alert created', { binId, alertKind, percentFull });
-      }
-    }
+    // Use enhanced alert management instead of old logic
+    await manageAlerts(binId, percentFull);
 
   } catch (error) {
     logger.error('Error processing reading', error);

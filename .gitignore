@@ -67,36 +67,3 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
-
-# Environment variables
-.env.local
-.env.production
-
-# Firebase service account keys
-scripts/serviceAccountKey.json
-**/serviceAccountKey.json
-
-# Node modules
-node_modules/
-cloud-functions/node_modules/
-scripts/node_modules/
-
-# Firebase cache
-.firebase/
-firebase-debug.log
-firestore-debug.log
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-npm-debug.log*
-
