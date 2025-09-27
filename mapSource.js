@@ -3,6 +3,7 @@
 // and adds markers for trash bin locations.
 	// Initialize map when the bin management tab is shown
   
+	
 	function initializeBinMap() {
 			// Check if map container exists and is visible
 			const mapContainer = document.getElementById('binLocationMap');

@@ -204,44 +204,37 @@
 				</div>
 			</div>
 
-			<!-- FIXED: Waste Data Reports Section -->
-			<div id="reports" class="tab-section p-8 hidden" role="region" aria-label="Waste Data Reports">
-				<h2 class="text-2xl font-bold mb-6">Waste Data Reports</h2>
-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-					<!-- Waste Composition Chart -->
-					<div class="bg-white rounded-lg shadow p-6">
-						<h3 class="text-lg font-semibold mb-4">Waste Composition</h3>
-						<canvas id="wasteCompositionChart" height="300" aria-label="Waste Composition" role="img"></canvas>
-					</div>
+			<!-- Waste Data Reports Section -->
+<div id="reports" class="tab-section p-8 hidden" role="region" aria-label="Waste Data Reports">
+    <h2 class="text-2xl font-bold mb-6">Waste Data Reports</h2>
+    
+    <!-- Waste Collection Trends - Full Width -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4">Collection Trends (Weekly)</h3>
+        <canvas id="collectionTrendsChart" height="100" aria-label="Collection Trends" role="img"></canvas>
+    </div>
 
-					<!-- Waste Collection Trends -->
-					<div class="bg-white rounded-lg shadow p-6">
-						<h3 class="text-lg font-semibold mb-4">Collection Trends</h3>
-						<canvas id="collectionTrendsChart" height="300" aria-label="Collection Trends" role="img"></canvas>
-					</div>
-
-					<!-- Detailed Reports -->
-					<div class="bg-white rounded-lg shadow p-6 col-span-2">
-						<h3 class="text-lg font-semibold mb-4">Detailed Reports</h3>
-						<div class="space-y-4">
-							<div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-								<div>
-									<h4 class="font-medium">Monthly Waste Report</h4>
-									<p class="text-sm text-gray-500">Current Month</p>
-								</div>
-								<button id="downloadMonthly" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" aria-label="Download Monthly Report">Download</button>
-							</div>
-							<div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-								<div>
-									<h4 class="font-medium">Weekly Analysis</h4>
-									<p class="text-sm text-gray-500">Current Week</p>
-								</div>
-								<button id="downloadWeekly" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" aria-label="Download Weekly Analysis">Download</button>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+    <!-- Detailed Reports -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold mb-4">Detailed Reports</h3>
+        <div class="space-y-4">
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                    <h4 class="font-medium">Monthly Waste Report</h4>
+                    <p class="text-sm text-gray-500">Current Month</p>
+                </div>
+                <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" aria-label="Download Monthly Report">Download</button>
+            </div>
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                    <h4 class="font-medium">Weekly Analysis</h4>
+                    <p class="text-sm text-gray-500">Current Week</p>
+                </div>
+                <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" aria-label="Download Weekly Analysis">Download</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 			<!-- User Management Section -->
 			<div id="users" class="tab-section p-8 hidden" role="region" aria-label="User Management">

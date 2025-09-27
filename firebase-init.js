@@ -71,7 +71,7 @@ function initializeFirebase() {
   if (initialized) {
     return { app, auth: firebaseAuth, db: firebaseDb };
   }
-
+  
   try {
     app = initializeApp(firebaseConfig);
     firebaseAuth = getAuth(app);

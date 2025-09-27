@@ -112,67 +112,118 @@ import { auth, db, collection, query, where, orderBy, limit, onSnapshot,
 		});
 	}
 
-	// FIXED: Real-time composition chart with actual data
-	function initCompositionChart() {
-		if (chartInstances.composition) return;
-		
-		const canvas = document.getElementById('wasteCompositionChart');
-		if (!canvas) return;
+	
 
-		const ctx = canvas.getContext('2d');
-		chartInstances.composition = new Chart(ctx, {
-			type: 'doughnut',
-			data: {
-				labels: ['Food Waste'],
-				datasets: [{
-					data: [0],
-					backgroundColor: ['#28a745']
-				}]
-			},
-			options: {
-				responsive: true,
-				plugins: { legend: { position: 'top' } }
-			}
-		});
-
-		// Load real-time composition data
-		loadCompositionData();
-	}
-
-
-	// FIXED: Real-time trends chart with actual data
 	function initTrendsChart() {
-		if (chartInstances.trends) return;
-		
-		const canvas = document.getElementById('collectionTrendsChart');
-		if (!canvas) return;
+    if (chartInstances.trends) return;
+    
+    const canvas = document.getElementById('collectionTrendsChart');
+    if (!canvas) return;
 
-		const ctx = canvas.getContext('2d');
-		chartInstances.trends = new Chart(ctx, {
-			type: 'bar',
-			data: {
-				labels: [],
-				datasets: [{
-					label: 'Collections per Week',
-					data: [],
-					backgroundColor: '#28a745'
-				}]
-			},
-			options: {
-				responsive: true,
-				plugins: { legend: { position: 'top' } },
-				scales: {
-					y: { 
-						beginAtZero: true, 
-						title: { display: true, text: 'Collections' }
-					}
-				}
-			}
-		});
+    const ctx = canvas.getContext('2d');
+    chartInstances.trends = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Collections per Week',
+                data: [],
+                backgroundColor: '#28a745',
+                borderColor: '#1e7e34',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { 
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    title: { display: true, text: 'Number of Collections' }
+                },
+                x: {
+                    title: { display: true, text: 'Week' }
+                }
+            }
+        }
+    });
+}
 
-		// Load real-time trends data
-		loadTrendsData();
-	}
+// Add this new function to load weekly trends data
+function loadWeeklyTrendsData() {
+    const q = query(
+        collection(db, 'readings'),
+        orderBy('ts', 'desc'),
+        limit(200) // Get enough data to analyze trends
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const weeklyCollections = {};
+        let lastWeight = {};
+
+        // Get current week number
+        const currentWeek = getWeekNumber(new Date());
+        const weeksToShow = 8; // Show 8 weeks like the waste chart shows 7 days
+
+        // Initialize weeks
+        for (let i = weeksToShow - 1; i >= 0; i--) {
+            const weekNum = currentWeek - i;
+            weeklyCollections[weekNum] = 0;
+        }
+
+        // Process readings to detect collections
+        const readings = [];
+        snapshot.forEach(docSnap => {
+            const reading = { id: docSnap.id, ...docSnap.data() };
+            readings.push(reading);
+        });
+
+        // Sort by timestamp
+        readings.sort((a, b) => {
+            const aTime = a.ts.toDate ? a.ts.toDate() : new Date(a.ts);
+            const bTime = b.ts.toDate ? b.ts.toDate() : new Date(b.ts);
+            return aTime - bTime;
+        });
+
+        // Detect collections (significant weight drops)
+        readings.forEach(reading => {
+            const readingDate = reading.ts.toDate ? reading.ts.toDate() : new Date(reading.ts);
+            const weekNum = getWeekNumber(readingDate);
+            const binId = reading.binId;
+
+            if (lastWeight[binId] && reading.weightKg < lastWeight[binId] * 0.5) {
+                // Detected a collection (weight dropped by more than 50%)
+                if (weeklyCollections.hasOwnProperty(weekNum)) {
+                    weeklyCollections[weekNum]++;
+                }
+            }
+            lastWeight[binId] = reading.weightKg;
+        });
+
+        // Update chart
+        if (chartInstances.trends) {
+            const weeks = Object.keys(weeklyCollections).sort((a, b) => a - b);
+            const labels = weeks.map(week => `Week ${week}`);
+            const data = weeks.map(week => weeklyCollections[week]);
+
+            chartInstances.trends.data.labels = labels;
+            chartInstances.trends.data.datasets[0].data = data;
+            chartInstances.trends.update();
+        }
+    });
+
+    subscriptions.push(unsubscribe);
+}
+
+// Helper function to get week number
+function getWeekNumber(date) {
+    const onejan = new Date(date.getFullYear(), 0, 1);
+    const today = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const dayOfYear = ((today - onejan + 86400000) / 86400000);
+    return Math.ceil(dayOfYear / 7);
+}
 
 
 	// FIXED: Load actual composition data from readings
@@ -817,9 +868,12 @@ function setupRealTimeStatusUpdates() {
 		}
 
 		if (targetId === 'reports') {
-			initTrendsChart();
-			initCompositionChart();
-		}
+    initTrendsChart();
+    if (!renderedSections.has('trends')) {
+        loadWeeklyTrendsData(); // Add this line
+        renderedSections.add('trends');
+    }
+}
 
 		if (targetId === 'bin-management') {
 			if (window.binsData) {
